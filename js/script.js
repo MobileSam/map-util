@@ -49,6 +49,9 @@ $(document).ready(function() {
   });
 
   textarea.on('input propertychange', function(ev) {
+    latSelect.html('');
+    lngSelect.html('');
+
     parseCSV();
   });
 });
@@ -76,8 +79,6 @@ function parseCSV() {
     if (latIndex != -1 && lngIndex != -1) {
       toggleConfig(true, true);
       
-      $('.panel-title').click();
-
       var icon = L.divIcon({ className: 'loc', iconSize: null })
         , bounds = L.latLngBounds([])
         , pos;
@@ -105,28 +106,37 @@ function parseCSV() {
 }
 
 function setOptions(rows) {
-  var options = '';
+  var options = '<option value="-1"></options>';
 
-  if (rows && rows.length) {
-    rows[0].split(',').forEach(function(item, index) {
-      options += '<option value="' + index + '">' + item + '</option>';
-    });
-  }  
+  if (!latSelect.html() || !lngSelect.html()) {
+    if (rows && rows.length) {
+      rows[0].split(',').forEach(function(item, index) {
+        options += '<option value="' + index + '">' + item + '</option>';
+      });
+    }  
 
-  latSelect.html(options);
-  lngSelect.html(options);
+    latSelect.html(options);
+    lngSelect.html(options);
+  }
 }
 
 function findIndexes(rows) {
-  var lngIndex = findLngIndex(rows)
-    , latIndex = -1;
+  if (rows.length && (latSelect.val() == -1 || lngSelect.val() == -1)) {
+    var lngIndex = findLngIndex(rows)
+      , latIndex = -1;
 
-  if (lngIndex != -1) {
-    latIndex = findLatIndex(rows, lngIndex);
+    if (lngIndex != -1) {
+      latIndex = findLatIndex(rows, lngIndex);
+    }
+
+    if (rows[0].split(',').length == 2 && latIndex == -1 && lngIndex == -1) {
+      latIndex = 0;
+      lngIndex = 1;
+    }
+
+    latSelect.val(latIndex);
+    lngSelect.val(lngIndex);
   }
-
-  latSelect.val(latIndex);
-  lngSelect.val(lngIndex);
 }
 
 function findLngIndex(rows) {
