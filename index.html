@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge, chrome=1" />
+    
+    <title>Map Utility</title>
+
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="//api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.css" />
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+
+  <body>
+    <div id="map"></div>
+
+    <div class="sidebar">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            Paste CSV here <span class="pull-right glyphicon glyphicon-chevron-up"></span>
+          </h3>
+        </div>
+
+        <div class="panel-body">
+          <form role="form-horizontal">
+            <div class="form-group">
+              <textarea class="form-control csv" rows="15"></textarea>
+            </div>
+
+            <div class="config hidden">
+              <div class="alert alert-warning hidden"><strong>Warning!</strong> Unable to determine latitude and longitude automatically</div>
+              
+              <div class="form-group">
+                <label for="latitude" class="control-label">Latitude</label>
+                <select class="form-control latitude"></select>
+              </div>
+
+              <div class="form-group">
+                <label for="longitude" class="control-label">Longitude</label>
+                <select class="form-control longitude"></select>
+              </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="config" class="btn btn-warning">Config</button>
+            <button type="clear" class="btn btn-danger pull-right">Clear</button>
+          </form>
+        </div>
+      </div>
+    </div>
+   
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/js/bootstrap.min.js"></script>
+    <script src="//api.tiles.mapbox.com/mapbox.js/v1.4.0/mapbox.js"></script>
+    <script src="./js/script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,32 @@
+html, body, #map { height: 100%; overflow: hidden; }
+
+.sidebar {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+
+  width: 30%;
+  min-height: 100%;
+}
+
+select {
+  -webkit-appearance: none;
+}
+
+.loc {
+  width: 29px;
+  height: 44px;
+  
+  background-image: url(../img/pin.png);
+  background-size: 100%;
+  position: relative;
+
+  margin-top: -44px;
+  margin-left: -14.5px;
+}
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) { 
+  .loc {
+    background-image: url(../img/pin@2x.png);
+  }
+}
