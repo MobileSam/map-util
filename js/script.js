@@ -26,25 +26,25 @@ $(document).ready(function() {
 
   $('button[type="submit"]').on('click', function(ev) {
     parseCSV();
-    
+
     return false;
   });
 
   $('button[type="config"]').on('click', function(ev) {
     toggleConfig(false, true);
-    
+
     return false;
   });
 
   $('button[type="clear"]').on('click', function(ev) {
     markerPanel.clearLayers();
-    
+
     toggleConfig(true, true);
     textarea.val('');
-    
+
     latSelect.html('');
     lngSelect.html('');
-    
+
     return false;
   });
 
@@ -57,8 +57,27 @@ $(document).ready(function() {
 });
 
 function initMap() {
+  L.mapbox.accessToken = 'pk.eyJ1IjoiZGlub3oiLCJhIjoidU1XcjhDOCJ9.R0eFLWNRudaUCzXjd0R4cg';
+
   map = L.mapbox.map('map').setView([45.5594408, -73.7118666], 11);
   map.addLayer(L.mapbox.tileLayer('dinoz.gan1bagi'));
+  map.on('click', function(e) {
+    var msg = e.latlng.lat + ', ' + e.latlng.lng
+      , icon = L.divIcon({ className: 'loc', iconSize: null })
+      , m;
+
+    if (textarea.val().indexOf(msg) == -1) {
+      m = L.marker(e.latlng, { icon: icon, draggable: true }).on('dragend', markerDragged).on('dblclick', removeMarker).addTo(markerPanel);
+
+      m.line = msg;
+
+      if (textarea.val()) {
+        msg = textarea.val() + '\n' + msg;
+      }
+
+      textarea.val(msg);
+    }
+  });
 
   markerPanel = new L.LayerGroup();
   map.addLayer(markerPanel);
@@ -78,10 +97,10 @@ function parseCSV() {
 
     if (latIndex != -1 && lngIndex != -1) {
       toggleConfig(true, true);
-      
+
       var icon = L.divIcon({ className: 'loc', iconSize: null })
         , bounds = L.latLngBounds([])
-        , pos;
+        , pos, m;
 
       markerPanel.clearLayers();
 
@@ -92,7 +111,8 @@ function parseCSV() {
           pos = new L.LatLng(latLng[latIndex], latLng[lngIndex]);
           bounds.extend(pos);
 
-          L.marker(pos, { icon: icon }).addTo(markerPanel);
+          m = L.marker(pos, { icon: icon, draggable: true }).on('dragend', markerDragged).on('dblclick', removeMarker).addTo(markerPanel);
+          m.line = latLng[latIndex] + ',' + latLng[lngIndex];
         } catch (err) {
           // Invalid lat/lng pair most likely cause by the header row or invalid user config
         }
@@ -113,7 +133,7 @@ function setOptions(rows) {
       rows[0].split(',').forEach(function(item, index) {
         options += '<option value="' + index + '">' + item + '</option>';
       });
-    }  
+    }
 
     latSelect.html(options);
     lngSelect.html(options);
@@ -145,7 +165,7 @@ function findLngIndex(rows) {
 
   rows.forEach(function(row) {
     parts = row.split(',');
-    
+
     parts.forEach(function(item, index) {
       if (!isNaN(item) && isFinite(item) && item.indexOf('.') != -1) {
         if (((item >= -180 && item < -90) || (item > 90 && item <= 180)) && lngIndex == -1) {
@@ -166,7 +186,7 @@ function findLatIndex(rows, lngIndex) {
 
   rows.forEach(function(row) {
     parts = row.split(',');
-    
+
     parts.forEach(function(item, index) {
       if (index != lngIndex && !isNaN(item) && isFinite(item) && item.indexOf('.') != -1) {
         if (item >= -90 && item <= 90 && latIndex == -1) {
@@ -177,11 +197,24 @@ function findLatIndex(rows, lngIndex) {
       }
     });
   });
-  
+
   return latIndex;
 }
 
 function toggleConfig(hide, hideAlert) {
   config.toggleClass('hidden', hide);
   alert.toggleClass('hidden', hideAlert);
+}
+
+function markerDragged(e) {
+  var line = e.target._latlng.lat + ', ' + e.target._latlng.lng;
+
+  textarea.val(textarea.val().replace(e.target.line, line));
+
+  e.target.line = line;
+}
+
+function removeMarker(e) {
+  textarea.val(textarea.val().replace(e.target.line + '\n', ''));
+  markerPanel.removeLayer(e.target);
 }
