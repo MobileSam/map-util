@@ -48,6 +48,10 @@ function initMap() {
       zoom: 11
   });
 
+  map.addControl(new mapboxgl.Geocoder({ position: 'top-left' }));
+  map.addControl(new mapboxgl.Navigation({ position: 'top-left' }));
+  map.addControl(new mapboxgl.Geolocate({ position: 'top-left' }));
+
   source = new mapboxgl.GeoJSONSource({
     data: geojson
   });
