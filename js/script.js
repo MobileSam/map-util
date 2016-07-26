@@ -1,10 +1,15 @@
 var map
-  , markerPanel
-  , latitudeSelect
-  , longitudeSelect
+  , latSelect
+  , lngSelect
   , config
   , alert
   , textarea;
+
+var geojson = {
+  type: 'FeatureCollection',
+  features: []
+};
+
 
 $(document).ready(function() {
   latSelect = $('.latitude');
@@ -17,35 +22,12 @@ $(document).ready(function() {
 
   initMap();
 
-  $('.panel-title').on('click', function(ev) {
-    $(this).find('.glyphicon').toggleClass('glyphicon-chevron-up glyphicon-chevron-down');
-    $('.panel-body').toggle();
+  $('.panel-heading').on('click', togglePanel);
 
-    return false;
-  });
-
-  $('button[type="submit"]').on('click', function(ev) {
-    parseCSV();
-
-    return false;
-  });
-
-  $('button[type="config"]').on('click', function(ev) {
-    toggleConfig(false, true);
-
-    return false;
-  });
-
-  $('button[type="clear"]').on('click', function(ev) {
-    markerPanel.clearLayers();
-
-    toggleConfig(true, true);
-    textarea.val('');
-
-    latSelect.html('');
-    lngSelect.html('');
-
-    return false;
+  $('button[btn-action="submit"]').on('click', parseCSV);
+  $('button[btn-action="clear"]').on('click', clearAll);
+  $('button[btn-action="config"]').on('click', function () {
+    return toggleConfig(false, true);
   });
 
   textarea.on('input propertychange', function(ev) {
@@ -57,38 +39,62 @@ $(document).ready(function() {
 });
 
 function initMap() {
-  L.mapbox.accessToken = 'pk.eyJ1IjoiZGlub3oiLCJhIjoidU1XcjhDOCJ9.R0eFLWNRudaUCzXjd0R4cg';
+  mapboxgl.accessToken = 'pk.eyJ1IjoidHJhbnNpdCIsImEiOiJjaWhtY2N4NWswNnBydGpqN2hnN3MyZWVvIn0.L8k881joZvXRJLHrd0ki7Q';
 
-  map = L.mapbox.map('map').setView([45.5594408, -73.7118666], 11);
-  map.addLayer(L.mapbox.tileLayer('dinoz.gan1bagi'));
-  map.on('click', function(e) {
-    var msg = e.latlng.lat + ', ' + e.latlng.lng
-      , icon = L.divIcon({ className: 'loc', iconSize: null })
-      , m;
-
-    if (textarea.val().indexOf(msg) == -1) {
-      m = L.marker(e.latlng, { icon: icon, draggable: true }).on('dragend', markerDragged).on('dblclick', removeMarker).addTo(markerPanel);
-
-      m.line = msg;
-
-      if (textarea.val()) {
-        msg = textarea.val() + '\n' + msg;
-      }
-
-      textarea.val(msg);
-    }
+  map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v9',
+      center: [ -73.7118666, 45.5594408 ],
+      zoom: 11
   });
 
-  markerPanel = new L.LayerGroup();
-  map.addLayer(markerPanel);
+  source = new mapboxgl.GeoJSONSource({
+    data: geojson
+  });
+
+  map.on('load', function() {
+    map.addSource('point', source);
+
+    map.addLayer({
+      'id': 'point',
+      'type': 'circle',
+      'source': 'point',
+      'paint': {
+        'circle-radius': 10,
+        'circle-color': '#3887be'
+      }
+    });
+  });
+
+  map.on('click', function (e) {
+    var features = map.queryRenderedFeatures(e.point, { layers: ['point'] });
+
+    if (features.length) {
+      map.flyTo({ center: features[0].geometry.coordinates });
+    } else {
+      var value = textarea.val();
+
+      if (value.length) {
+        value += '\n';
+      }
+
+      value += e.lngLat.lat + ',' + e.lngLat.lng;
+      textarea.val(value);
+
+      parseCSV(true);
+    }
+});
 }
 
-function parseCSV() {
+function parseCSV(keepBounds) {
   var csv = textarea.val()
     , rows = csv.split('\n')
-    , latLng;
+    , bounds = new mapboxgl.LngLatBounds()
+    , latLng, pos;
 
-  if (rows.length && rows[0].split(',').length > 1) {
+  geojson.features = [];
+
+  if (rows.length && rows[0].split(/[,\t]/g).length > 1) {
     setOptions(rows);
     findIndexes(rows);
 
@@ -98,31 +104,62 @@ function parseCSV() {
     if (latIndex != -1 && lngIndex != -1) {
       toggleConfig(true, true);
 
-      var icon = L.divIcon({ className: 'loc', iconSize: null })
-        , bounds = L.latLngBounds([])
-        , pos, m;
-
-      markerPanel.clearLayers();
-
       rows.forEach(function(item) {
-        latLng = item.split(',');
+        latLng = item.split(/[,\t]/g);
 
-        try {
-          pos = new L.LatLng(latLng[latIndex], latLng[lngIndex]);
-          bounds.extend(pos);
-
-          m = L.marker(pos, { icon: icon, draggable: true }).on('dragend', markerDragged).on('dblclick', removeMarker).addTo(markerPanel);
-          m.line = latLng[latIndex] + ',' + latLng[lngIndex];
-        } catch (err) {
-          // Invalid lat/lng pair most likely cause by the header row or invalid user config
+        if (!isNaN(parseFloat(latLng[latIndex])) && !isNaN(parseFloat(latLng[lngIndex]))) {
+          geojson.features.push(createFeature(latLng[latIndex], latLng[lngIndex]));
+          bounds.extend([latLng[lngIndex], latLng[latIndex]]);
         }
       });
 
-      map.fitBounds(bounds);
+      if (keepBounds !== true) {
+        if (rows.length > 1) {
+          map.fitBounds(bounds);
+        } else {
+          map.flyTo({ center: geojson.features[0].geometry.coordinates });
+        }
+      }
     } else {
       toggleConfig(false, false);
     }
   }
+
+  source.setData(geojson);
+
+  return false;
+}
+
+function createFeature(lat, lng) {
+  return {
+    'type': 'Feature',
+    'geometry': {
+      'type': 'Point',
+      'coordinates': [ lng, lat ]
+    }
+  };
+}
+
+function togglePanel() {
+  var $this = $(this);
+
+  $this.find('.glyphicon').toggleClass('glyphicon-chevron-up glyphicon-chevron-down');
+  $this.next().toggle();
+
+  return false;
+}
+
+function clearAll() {
+  toggleConfig(true, true);
+  textarea.val('');
+
+  latSelect.html('');
+  lngSelect.html('');
+
+  geojson.features = [];
+  source.setData(geojson);
+
+  return false;
 }
 
 function setOptions(rows) {
@@ -130,7 +167,7 @@ function setOptions(rows) {
 
   if (!latSelect.html() || !lngSelect.html()) {
     if (rows && rows.length) {
-      rows[0].split(',').forEach(function(item, index) {
+      rows[0].split(/[,\t]/g).forEach(function(item, index) {
         options += '<option value="' + index + '">' + item + '</option>';
       });
     }
@@ -149,7 +186,7 @@ function findIndexes(rows) {
       latIndex = findLatIndex(rows, lngIndex);
     }
 
-    if (rows[0].split(',').length == 2 && latIndex == -1 && lngIndex == -1) {
+    if (rows[0].split(/[,\t]/g).length == 2 && latIndex == -1 && lngIndex == -1) {
       latIndex = 0;
       lngIndex = 1;
     }
@@ -164,7 +201,7 @@ function findLngIndex(rows) {
     , parts;
 
   rows.forEach(function(row) {
-    parts = row.split(',');
+    parts = row.split(/[,\t]/g);
 
     parts.forEach(function(item, index) {
       if (!isNaN(item) && isFinite(item) && item.indexOf('.') != -1) {
@@ -185,7 +222,7 @@ function findLatIndex(rows, lngIndex) {
     , parts;
 
   rows.forEach(function(row) {
-    parts = row.split(',');
+    parts = row.split(/[,\t]/g);
 
     parts.forEach(function(item, index) {
       if (index != lngIndex && !isNaN(item) && isFinite(item) && item.indexOf('.') != -1) {
@@ -204,17 +241,4 @@ function findLatIndex(rows, lngIndex) {
 function toggleConfig(hide, hideAlert) {
   config.toggleClass('hidden', hide);
   alert.toggleClass('hidden', hideAlert);
-}
-
-function markerDragged(e) {
-  var line = e.target._latlng.lat + ', ' + e.target._latlng.lng;
-
-  textarea.val(textarea.val().replace(e.target.line, line));
-
-  e.target.line = line;
-}
-
-function removeMarker(e) {
-  textarea.val(textarea.val().replace(e.target.line + '\n', ''));
-  markerPanel.removeLayer(e.target);
 }
