@@ -25,9 +25,7 @@
 
         <div class="panel-body">
           <form role="form-horizontal">
-            <div class="form-group">
-              <textarea class="form-control csv" rows="15"></textarea>
-            </div>
+            <textarea class="form-control csv" rows="15"></textarea>
 
             <div class="config hidden">
               <div class="alert alert-warning hidden"><strong>Warning!</strong> Unable to determine latitude and longitude automatically</div>
@@ -43,9 +41,11 @@
               </div>
             </div>
 
-            <button type="button" btn-action="submit" class="btn btn-primary">Submit</button>
-            <button type="button" btn-action="config" class="btn btn-warning">Config</button>
-            <button type="button" btn-action="clear" class="btn btn-danger pull-right">Clear</button>
+            <div class="footer">
+              <button type="button" btn-action="submit" class="btn btn-primary">Submit</button>
+              <button type="button" btn-action="config" class="btn btn-warning">Config</button>
+              <button type="button" btn-action="clear" class="btn btn-danger pull-right">Clear</button>
+            </div>
           </form>
         </div>
       </div>

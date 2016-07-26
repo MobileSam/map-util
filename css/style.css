@@ -12,6 +12,36 @@ select {
   -webkit-appearance: none;
 }
 
+.panel {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 3px;
+}
+
+.panel-body {
+  padding: 0;
+}
+
+.panel-body .config,
+.panel-body .footer {
+  border-top: 1px solid #ddd;
+  padding: 15px;
+}
+
+.panel-default > .panel-heading {
+  border-bottom: 1px solid #ddd;
+}
+
+.panel-body .config {
+  padding-bottom: 5px;
+}
+
+.panel-body textarea {
+  height: 200px;
+  padding: 15px;
+  border: none;
+}
+
 .loc {
   width: 29px;
   height: 44px;
