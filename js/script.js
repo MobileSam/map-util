@@ -34,6 +34,7 @@ $(document).ready(function() {
     latSelect.html('');
     lngSelect.html('');
 
+    decodePolyline();
     parseCSV();
   });
 });
@@ -132,6 +133,48 @@ function parseCSV(keepBounds) {
   source.setData(geojson);
 
   return false;
+}
+
+function decodePolyline() {
+  var encoded = textarea.val(),
+    points = [],
+    index = 0,
+    len = encoded.length,
+    lat = 0,
+    lng = 0;
+
+  if (encoded.split('\n').length !== 1) {
+    return;
+  }
+
+    while (index < len) {
+        var b, shift = 0, result = 0;
+        do {
+            b = encoded.charCodeAt(index++) - 63;
+            result |= (b & 0x1f) << shift;
+            shift += 5;
+        } while (b >= 0x20);
+        var deltaLat = (result & 1) ? ~(result >> 1) : (result >> 1);
+        lat += deltaLat;
+
+        shift = 0;
+        result = 0;
+        do {
+            b = encoded.charCodeAt(index++) - 63;
+            result |= (b & 0x1f) << shift;
+            shift += 5;
+        } while (b >= 0x20);
+        var deltaLng = (result & 1) ? ~(result >> 1) : (result >> 1);
+        lng += deltaLng;
+
+        points.push([lat / 1e5, lng / 1e5]);
+    }
+
+    if (points.length) {
+      textarea.val(points.map((point) => {
+        return `${point[0]}, ${point[1]}`
+      }).join('\n'));
+    }
 }
 
 function createFeature(lat, lng) {
