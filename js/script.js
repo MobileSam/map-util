@@ -37,6 +37,15 @@ $(document).ready(function() {
     decodePolyline();
     parseCSV();
   });
+
+  map.on('load', function () {
+    var text = getParameterByName('text');
+
+    if (text && text.length) {
+      textarea.val(text.replace('|', '\n'));
+      parseCSV();
+    }
+  });
 });
 
 function initMap() {
@@ -288,4 +297,25 @@ function findLatIndex(rows, lngIndex) {
 function toggleConfig(hide, hideAlert) {
   config.toggleClass('hidden', hide);
   alert.toggleClass('hidden', hideAlert);
+}
+
+function getParameterByName(name, url) {
+  if (!url) {
+    url = window.location.href;
+  }
+
+  name = name.replace(/[\[\]]/g, "\\$&");
+
+  var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+    results = regex.exec(url);
+
+  if (!results) {
+    return null;
+  }
+
+  if (!results[2]) {
+    return '';
+  }
+
+  return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
