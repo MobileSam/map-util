@@ -75,7 +75,7 @@ function initMap() {
       'source': 'point',
       'paint': {
         'circle-radius': 10,
-        'circle-color': '#3887be'
+        'circle-color': '#d43f3a'
       }
     });
   });
@@ -152,7 +152,8 @@ function decodePolyline() {
     lat = 0,
     lng = 0;
 
-  if (encoded.split('\n').length !== 1) {
+  if (encoded.split('\n').length !== 1 || !/[a-zA-Z]/g.test(encoded)) {
+    // Only check for encoded polyline on the first line and if it contains at least one letter
     return;
   }
 
