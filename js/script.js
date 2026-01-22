@@ -122,14 +122,14 @@ function parseCSV(keepBounds) {
       rows.forEach(function(item) {
         latLng = item.split(/[,\t]/g);
 
-        if (!isNaN(parseFloat(latLng[latIndex])) && !isNaN(parseFloat(latLng[lngIndex]))) {
+        if (latLng.length >= 2 && !isNaN(parseFloat(latLng[latIndex])) && !isNaN(parseFloat(latLng[lngIndex]))) {
           geojson.features.push(createFeature(latLng[latIndex], latLng[lngIndex]));
           bounds.extend([latLng[lngIndex], latLng[latIndex]]);
         }
       });
 
       if (keepBounds !== true) {
-        if (rows.length > 1) {
+        if (geojson.features.length > 1) {
           map.fitBounds(bounds);
         } else {
           map.flyTo({ center: geojson.features[0].geometry.coordinates });
