@@ -34,6 +34,7 @@ $(document).ready(function() {
     latSelect.html('');
     lngSelect.html('');
 
+    parseWKT();
     decodePolyline();
     parseCSV();
   });
@@ -185,6 +186,22 @@ function decodePolyline() {
         return `${point[0]}, ${point[1]}`
       }).join('\n'));
     }
+}
+
+function parseWKT() {
+  var text = textarea.val();
+
+  // Match WKT POINT format: POINT(lng lat) or POINT (lng lat)
+  var wktPattern = /^POINT\s*\(\s*(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s*\)$/i;
+  var match = text.trim().match(wktPattern);
+
+  if (match) {
+    var lng = parseFloat(match[1]);
+    var lat = parseFloat(match[2]);
+
+    // Convert WKT (x, y) = (lng, lat) to the app's lat, lng format
+    textarea.val(`${lat}, ${lng}`);
+  }
 }
 
 function createFeature(lat, lng) {
